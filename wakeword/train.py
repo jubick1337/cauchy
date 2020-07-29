@@ -68,6 +68,6 @@ for epoch in range(epochs):
         print(f'test loss: {test_loss / len(test_loader)}')
         print(f'test f1: {test_f1 / len(test_loader)}')
         if test_f1 / len(test_loader) > best_f1:
-            torch.save(model.state_dict(), '../models/wakeword_checkpoint.pt')
+            torch.save(model.state_dict(), './models/wakeword_checkpoint.pt')
             best_f1 = test_f1 / len(test_loader)
             # break

@@ -21,7 +21,9 @@ class WakeWordDataSet(torch.utils.data.Dataset):
         data = self._data.iloc[idx]
         waveform, sample_rate = torchaudio.load(data[0])
         label = data[1]
+
         if sample_rate > self._sample_rate:
             waveform = torchaudio.transforms.Resample(sample_rate, self._sample_rate)(waveform)
+
         mfcc = self._mfcc(waveform)
         return mfcc, label
