@@ -6,7 +6,7 @@ import wave
 
 from wakeword.model import WakeWordDetector
 
-checkpoint = torch.load('./models/wakeword.pt', map_location='cpu')
+checkpoint = torch.load('./models/wakeword_checkpoint.pt', map_location='cpu')
 model = WakeWordDetector(40, 64, num_layers=4)
 model.load_state_dict(checkpoint)
 model.eval()
@@ -52,4 +52,4 @@ with torch.no_grad():
     w, _ = torchaudio.load('output.wav')
     w = tr(w)
     w = w.transpose(1, -1)
-    print(torch.round(torch.sigmoid(model(w))))
+    print((torch.sigmoid(model(w))))
