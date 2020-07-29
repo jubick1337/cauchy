@@ -46,8 +46,8 @@ class WakeWordEngine:
         self.mfcc = torchaudio.transforms.MFCC(8000)
         self.audio_q = list()
 
-    def save(self, waveforms, fname="wakeword_temp"):
-        wf = wave.open(fname, "wb")
+    def save(self, waveforms, filename="wakeword_temp"):
+        wf = wave.open(filename, "wb")
         # set the channels
         wf.setnchannels(1)
         # set the sample format
@@ -58,12 +58,12 @@ class WakeWordEngine:
         wf.writeframes(b"".join(waveforms))
         # close the file
         wf.close()
-        return fname
+        return filename
 
     def predict(self, audio):
         with torch.no_grad():
-            fname = self.save(audio)
-            waveform, _ = torchaudio.load(fname)
+            filename = self.save(audio)
+            waveform, _ = torchaudio.load(filename)
             mfcc = self.mfcc(waveform).transpose(1, -1)
 
             out = self.model(mfcc)
@@ -89,7 +89,7 @@ class WakeWordEngine:
 
 
 class DemoAction:
-    def __init__(self, sensitivity=10):
+    def __init__(self, sensitivity=5):
         import subprocess
         import random
 
@@ -122,12 +122,12 @@ class DemoAction:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="demoing the wakeword engine")
-    parser.add_argument('--sensitivity', type=int, default=10, required=False,
+    parser.add_argument('--sensitivity', type=int, default=5, required=False,
                         help='lower value is more sensitive to activations')
 
     args = parser.parse_args()
     wakeword_engine = WakeWordEngine()
-    action = DemoAction(sensitivity=10)
+    action = DemoAction(sensitivity=5)
 
     wakeword_engine.run(action)
     threading.Event().wait()
