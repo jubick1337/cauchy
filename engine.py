@@ -39,7 +39,7 @@ class WakeWordEngine:
 
     def __init__(self):
         self.listener = Listener(sample_rate=8000, record_seconds=2)
-        checkpoint = torch.load('./models/wakeword.pt', map_location='cpu')
+        checkpoint = torch.load('./models/wakeword_checkpoint.pt', map_location='cpu')
         self.model = WakeWordDetector(40, 64, num_layers=4)
         self.model.load_state_dict(checkpoint)
         self.model.eval()
@@ -122,12 +122,12 @@ class DemoAction:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="demoing the wakeword engine")
-    parser.add_argument('--sensitivity', type=int, default=20, required=False,
+    parser.add_argument('--sensitivity', type=int, default=10, required=False,
                         help='lower value is more sensitive to activations')
 
     args = parser.parse_args()
     wakeword_engine = WakeWordEngine()
-    action = DemoAction(sensitivity=20)
+    action = DemoAction(sensitivity=10)
 
     wakeword_engine.run(action)
     threading.Event().wait()
