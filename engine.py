@@ -1,3 +1,6 @@
+from pathlib import Path
+import subprocess
+import logger
 import pyaudio
 import threading
 import time
@@ -8,8 +11,10 @@ import torch
 
 from wakeword.model import WakeWordDetector
 
+logger = logger.logger
 
-class Listener:
+
+class WakeWordListener:
 
     def __init__(self, sample_rate=8000, record_seconds=2):
         self.chunk = 1024
@@ -32,14 +37,14 @@ class Listener:
     def run(self, queue):
         thread = threading.Thread(target=self.listen, args=(queue,), daemon=True)
         thread.start()
-        print("\nWake Word Engine is now listening... \n")
+        logger.info("\nWake Word Engine is now listening... \n")
 
 
 class WakeWordEngine:
 
     def __init__(self):
-        self.listener = Listener(sample_rate=8000, record_seconds=2)
-        checkpoint = torch.load('./models/wakeword_checkpoint.pt', map_location='cpu')
+        self.listener = WakeWordListener(sample_rate=8000, record_seconds=2)
+        checkpoint = torch.load(Path('./models/wakeword_checkpoint.pt'), map_location='cpu')
         self.model = WakeWordDetector(40, 64, num_layers=4)
         self.model.load_state_dict(checkpoint)
         self.model.eval()
@@ -67,8 +72,8 @@ class WakeWordEngine:
             mfcc = self.mfcc(waveform).transpose(1, -1)
 
             out = self.model(mfcc)
-            pred = torch.round(torch.sigmoid(out))
-            return pred.item()
+            prediction = torch.round(torch.sigmoid(out))
+            return prediction.item()
 
     def inference_loop(self, action):
         while True:
@@ -88,22 +93,14 @@ class WakeWordEngine:
         thread.start()
 
 
-class DemoAction:
+class WakeWordAction:
     def __init__(self, sensitivity=5):
-        import subprocess
-        import random
-
-        self.random = random
-        self.subprocess = subprocess
         self.detect_in_row = 0
-
         self.sensitivity = sensitivity
-        self.activated = [
-            './activated.wav'
-        ]
+        self.activation_sound = Path('./activated.wav')
 
     def __call__(self, prediction):
-        if prediction == 1:
+        if prediction:
             self.detect_in_row += 1
             if self.detect_in_row == self.sensitivity:
                 self.play()
@@ -112,12 +109,8 @@ class DemoAction:
             self.detect_in_row = 0
 
     def play(self):
-        filename = self.random.choice(self.activated)
-        try:
-            print("playing", filename)
-            self.subprocess.check_output(['play', '-v', '.1', filename])
-        except Exception as e:
-            print(str(e))
+        subprocess.call(['play', '-v', '.1', self.activation_sound], stdout=subprocess.DEVNULL,
+                        stderr=subprocess.DEVNULL)
 
 
 if __name__ == "__main__":
@@ -127,7 +120,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     wakeword_engine = WakeWordEngine()
-    action = DemoAction(sensitivity=5)
+    action = WakeWordAction(sensitivity=5)
 
     wakeword_engine.run(action)
     threading.Event().wait()
