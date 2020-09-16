@@ -11,10 +11,25 @@ import pyaudio
 import torch
 import torchaudio
 
+from actions.simple_math import SimpleMathAction
 from asr.google_asr_wrapper import GoogleASRWrapper
 from wakeword.model import WakeWordDetector
 
 logger = logger.logger
+
+
+class Dispatcher:
+
+    def __init__(self):
+        self._actions = [SimpleMathAction()]
+
+    def execute(self, query: str) -> str:
+        for action in self._actions:
+            result = action.get_result(query)
+            if result:
+                return result
+
+        return 'Я вас не понял'
 
 
 class QueryListener:
@@ -142,7 +157,7 @@ class WakeWordAction:
                 self.detect_in_row = 0
                 text = self.asr.get_text(self.query_listener.file)
                 self.query_listener.flush()
-                print(text)
+                logger.info(f'recognized query: {text}')
 
         else:
             self.detect_in_row = 0
