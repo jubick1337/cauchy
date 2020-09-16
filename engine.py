@@ -1,17 +1,55 @@
-from pathlib import Path
+import argparse
+import os
 import subprocess
-import logger
-import pyaudio
 import threading
 import time
-import argparse
 import wave
-import torchaudio
-import torch
+from pathlib import Path
 
+import logger
+import pyaudio
+import torch
+import torchaudio
+
+from asr.google_asr_wrapper import GoogleASRWrapper
 from wakeword.model import WakeWordDetector
 
 logger = logger.logger
+
+
+class QueryListener:
+
+    def __init__(self, sample_rate=16000, record_seconds=4):
+        self.chunk = 1024
+        self.file = 'tmp.wav'
+        self.sample_rate = sample_rate
+        self.record_seconds = record_seconds
+        self.p = pyaudio.PyAudio()
+        self.stream = self.p.open(format=pyaudio.paInt16,
+                                  channels=1,
+                                  rate=self.sample_rate,
+                                  input=True,
+                                  output=True,
+                                  frames_per_buffer=self.chunk)
+
+    def record(self):
+        logger.info('started rec')
+        frames = []
+
+        for i in range(0, int(self.sample_rate / self.chunk * self.record_seconds)):
+            data = self.stream.read(self.chunk, exception_on_overflow=False)
+            frames.append(data)
+
+        wf = wave.open(self.file, "wb")
+        wf.setnchannels(1)
+        wf.setsampwidth(self.p.get_sample_size(pyaudio.paInt16))
+        wf.setframerate(self.sample_rate)
+        wf.writeframes(b"".join(frames))
+        wf.close()
+        logger.info('stop rec')
+
+    def flush(self):
+        os.remove(self.file)
 
 
 class WakeWordListener:
@@ -53,15 +91,10 @@ class WakeWordEngine:
 
     def save(self, waveforms, filename="wakeword_temp"):
         wf = wave.open(filename, "wb")
-        # set the channels
         wf.setnchannels(1)
-        # set the sample format
         wf.setsampwidth(self.listener.p.get_sample_size(pyaudio.paInt16))
-        # set the sample rate
         wf.setframerate(8000)
-        # write the frames as bytes
         wf.writeframes(b"".join(waveforms))
-        # close the file
         wf.close()
         return filename
 
@@ -70,7 +103,6 @@ class WakeWordEngine:
             filename = self.save(audio)
             waveform, _ = torchaudio.load(filename)
             mfcc = self.mfcc(waveform).transpose(1, -1)
-
             out = self.model(mfcc)
             prediction = torch.round(torch.sigmoid(out))
             return prediction.item()
@@ -94,23 +126,30 @@ class WakeWordEngine:
 
 
 class WakeWordAction:
-    def __init__(self, sensitivity=5):
+    def __init__(self, asr, sensitivity=5):
         self.detect_in_row = 0
         self.sensitivity = sensitivity
         self.activation_sound = Path('./activated.wav')
+        self.asr = asr
+        self.query_listener = QueryListener()
 
     def __call__(self, prediction):
         if prediction:
             self.detect_in_row += 1
             if self.detect_in_row == self.sensitivity:
                 self.play()
+                query_listener.record()
                 self.detect_in_row = 0
+                text = self.asr.get_text(self.query_listener.file)
+                self.query_listener.flush()
+                print(text)
+
         else:
             self.detect_in_row = 0
 
     def play(self):
-        subprocess.call(['play', '-v', '.1', self.activation_sound], stdout=subprocess.DEVNULL,
-                        stderr=subprocess.DEVNULL)
+        subprocess.Popen(['play', '-v', '.1', self.activation_sound], stdout=subprocess.DEVNULL,
+                         stderr=subprocess.DEVNULL)
 
 
 if __name__ == "__main__":
@@ -119,8 +158,9 @@ if __name__ == "__main__":
                         help='lower value is more sensitive to activations')
 
     args = parser.parse_args()
+    asr = GoogleASRWrapper(Path('asr/credentials.json'))
     wakeword_engine = WakeWordEngine()
-    action = WakeWordAction(sensitivity=5)
-
+    action = WakeWordAction(sensitivity=5, asr=asr)
+    query_listener = QueryListener()
     wakeword_engine.run(action)
     threading.Event().wait()
