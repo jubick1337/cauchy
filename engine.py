@@ -147,6 +147,7 @@ class WakeWordAction:
         self.activation_sound = Path('./activated.wav')
         self.asr = asr
         self.query_listener = QueryListener()
+        self.dispatcher = Dispatcher()
 
     def __call__(self, prediction):
         if prediction:
@@ -158,6 +159,7 @@ class WakeWordAction:
                 text = self.asr.get_text(self.query_listener.file)
                 self.query_listener.flush()
                 logger.info(f'recognized query: {text}')
+                logger.info(f'Result of dispatcher: {self.dispatcher.execute(text)}')
 
         else:
             self.detect_in_row = 0
