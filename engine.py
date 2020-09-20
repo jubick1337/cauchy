@@ -181,7 +181,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     asr = GoogleASRWrapper(Path('asr/credentials.json'))
-    tts = GoogleTTSWrapper(Path('asr/credentials.json'))
+    tts = GoogleTTSWrapper(Path('tts/credentials.json'))
     wakeword_engine = WakeWordEngine()
     action = WakeWordAction(sensitivity=5, asr=asr, tts=tts)
     query_listener = QueryListener()
