@@ -1,7 +1,8 @@
 from pathlib import Path
-from sklearn.metrics import f1_score
+
 import torch
 import torch.optim as optim
+from sklearn.metrics import f1_score
 from torch.utils.data import DataLoader
 
 from wakeword.dataset import WakeWordDataSet
