@@ -13,6 +13,7 @@ import torchaudio
 
 from actions.simple_math import SimpleMathAction
 from asr.google_asr_wrapper import GoogleASRWrapper
+from tts.google_tts_wrapper import GoogleTTSWrapper
 from wakeword.model import WakeWordDetector
 
 logger = logger.logger
@@ -141,11 +142,12 @@ class WakeWordEngine:
 
 
 class WakeWordAction:
-    def __init__(self, asr, sensitivity=5):
+    def __init__(self, asr, tts, sensitivity=5):
         self.detect_in_row = 0
         self.sensitivity = sensitivity
         self.activation_sound = Path('./activated.wav')
         self.asr = asr
+        self.tts = tts
         self.query_listener = QueryListener()
         self.dispatcher = Dispatcher()
 
@@ -153,19 +155,22 @@ class WakeWordAction:
         if prediction:
             self.detect_in_row += 1
             if self.detect_in_row == self.sensitivity:
-                self.play()
+                self.play(self.activation_sound)
                 query_listener.record()
                 self.detect_in_row = 0
                 text = self.asr.get_text(self.query_listener.file)
                 self.query_listener.flush()
                 logger.info(f'recognized query: {text}')
-                logger.info(f'Result of dispatcher: {self.dispatcher.execute(text)}')
+                dispatcher_result = self.dispatcher.execute(text)
+                logger.info(f'Result of dispatcher: {dispatcher_result}')
+                tts.get_audio(dispatcher_result)
+                self.play('./output.wav')
 
         else:
             self.detect_in_row = 0
 
-    def play(self):
-        subprocess.Popen(['play', '-v', '.1', self.activation_sound], stdout=subprocess.DEVNULL,
+    def play(self, sound: str):
+        subprocess.Popen(['play', '-v', '.1', sound], stdout=subprocess.DEVNULL,
                          stderr=subprocess.DEVNULL)
 
 
@@ -176,8 +181,9 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     asr = GoogleASRWrapper(Path('asr/credentials.json'))
+    tts = GoogleTTSWrapper(Path('asr/credentials.json'))
     wakeword_engine = WakeWordEngine()
-    action = WakeWordAction(sensitivity=5, asr=asr)
+    action = WakeWordAction(sensitivity=5, asr=asr, tts=tts)
     query_listener = QueryListener()
     wakeword_engine.run(action)
     threading.Event().wait()

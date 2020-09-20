@@ -11,7 +11,7 @@ class GoogleTTSWrapper:
         self._language_code = "ru-RU"
         self._ssml_gender = texttospeech.SsmlVoiceGender.MALE
         self._audio_encoding = texttospeech.AudioEncoding.MP3
-        self._audio_config = texttospeech.AudioConfig(audio_encoding=texttospeech.AudioEncoding.MP3)
+        self._audio_config = texttospeech.AudioConfig(audio_encoding=texttospeech.AudioEncoding.LINEAR16)
 
     def get_audio(self, text: str):
         synthesis_input = texttospeech.SynthesisInput(text=text)
@@ -21,5 +21,5 @@ class GoogleTTSWrapper:
             ), audio_config=self._audio_config
         )
 
-        with open("output.mp3", "wb") as out:
+        with open("output.wav", "wb") as out:
             out.write(response.audio_content)
