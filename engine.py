@@ -170,7 +170,7 @@ class WakeWordAction:
             self.detect_in_row = 0
 
     def play(self, sound: str):
-        subprocess.Popen(['play', '-v', '.1', sound], stdout=subprocess.DEVNULL,
+        subprocess.Popen(['play', '-v', '1', sound], stdout=subprocess.DEVNULL,
                          stderr=subprocess.DEVNULL)
 
 
