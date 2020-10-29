@@ -10,7 +10,7 @@ class Greeting(Action):
         self._regex = re.compile(r'(Привет|Здравствуйте)')
         self._answers = ['Привет', 'Хай', 'Рад тебя видеть']
 
-    def get_text(self, query: str) -> Optional[str]:
+    def get_result(self, query: str) -> Optional[str]:
         if self._regex.search(query):
             return random.choice(self._answers)
 

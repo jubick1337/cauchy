@@ -3,5 +3,5 @@ from typing import Optional
 
 
 class Action(ABC):
-    def get_text(self, query: str) -> Optional[str]:
+    def get_result(self, query: str) -> Optional[str]:
         pass
