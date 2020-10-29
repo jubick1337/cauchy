@@ -11,6 +11,7 @@ import pyaudio
 import torch
 import torchaudio
 
+from actions.greeting import Greeting
 from actions.simple_math import SimpleMathAction
 from asr.google_asr_wrapper import GoogleASRWrapper
 from tts.google_tts_wrapper import GoogleTTSWrapper
@@ -22,7 +23,7 @@ logger = logger.logger
 class Dispatcher:
 
     def __init__(self):
-        self._actions = [SimpleMathAction()]
+        self._actions = [SimpleMathAction(), Greeting()]
 
     def execute(self, query: str) -> str:
         for action in self._actions:
