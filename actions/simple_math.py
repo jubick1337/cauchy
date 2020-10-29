@@ -1,8 +1,10 @@
 import re
 from typing import Optional
 
+from actions.action import Action
 
-class SimpleMathAction:
+
+class SimpleMathAction(Action):
     def __init__(self):
         self._regex = re.compile(r'[А-Яа-я ]*(\d+) ([+\-*/]) (\d+)')
 
