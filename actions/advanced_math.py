@@ -15,5 +15,12 @@ class AdvancedMath(Action):
         query = query.replace('х', '*').replace('x', '*')
 
         if self._regex.match(query):
-            expression = ' '.join([c for c in query if c.isdigit() or c in ['+', '-', '*', '/']]).strip()
+            expression = ''
+            for char in query:
+                if char.isdigit():
+                    expression += char
+                elif char in ['+', '-', '/', '*']:
+                    expression += f' {char} '
+            expression = expression.strip()
+
             return str(eval(expression))

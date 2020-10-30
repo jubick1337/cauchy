@@ -11,6 +11,8 @@ class Greeting(Action):
         self._answers = ['Привет', 'Хай', 'Рад тебя видеть']
 
     def get_result(self, query: str) -> Optional[str]:
+        if not query:
+            return None
         if self._regex.search(query):
             return random.choice(self._answers)
 
