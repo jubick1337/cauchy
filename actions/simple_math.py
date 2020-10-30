@@ -2,11 +2,13 @@ import re
 from typing import Optional
 
 from actions.action import Action
+from engine import logger
 
 
-class SimpleMathAction(Action):
+class SimpleMath(Action):
     def __init__(self):
         self._regex = re.compile(r'[А-Яа-я ]*(\d+) ([+\-*/]) (\d+)')
+        logger.warn('SimpleMath is now deprecated')
 
     def get_result(self, query: str) -> Optional[str]:
         if not query:
