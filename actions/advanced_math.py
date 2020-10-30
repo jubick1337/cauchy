@@ -16,4 +16,4 @@ class AdvancedMath(Action):
 
         if self._regex.match(query):
             expression = ' '.join([c for c in query if c.isdigit() or c in ['+', '-', '*', '/']]).strip()
-            return eval(expression)
+            return str(eval(expression))
